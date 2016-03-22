@@ -1,0 +1,28 @@
+{
+  "name": "golem",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lafaulx/golem.git"
+  },
+  "author": "Yaroslav Kravchenko",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/lafaulx/golem/issues"
+  },
+  "homepage": "https://github.com/lafaulx/golem#readme",
+  "dependencies": {
+    "amqplib": "^0.4.1"
+  },
+  "devDependencies": {
+    "eslint-config-defaults": "^9.0.0"
+  },
+  "eslintConfig": {
+    "extends": "defaults/configurations/walmart/es6-node"
+  }
+}
