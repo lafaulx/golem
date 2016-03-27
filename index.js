@@ -20,7 +20,7 @@ amqp.connect(config.RABBITMQ_ADDR, function(err, conn) {
 
       log.info(`Received data: ${data.toString()}`);
 
-      spawnPhantomRender(data.html, data.width, data.height, function(id) {
+      spawnPhantomRender(data.html, data.width, data.height, function(err, id) {
         log.info(`Generated picture: ${id}`);
 
         ch.sendToQueue(msg.properties.replyTo,
