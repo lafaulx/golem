@@ -1,23 +1,25 @@
 {
-  "name": "golem",
+  "name": "golem-server",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js | bunyan"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/lafaulx/golem.git"
+    "url": "git+https://github.com/lafaulx/golem-server.git"
   },
   "author": "Yaroslav Kravchenko",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/lafaulx/golem/issues"
+    "url": "https://github.com/lafaulx/golem-server/issues"
   },
-  "homepage": "https://github.com/lafaulx/golem#readme",
+  "homepage": "https://github.com/lafaulx/golem-server#readme",
   "dependencies": {
-    "amqplib": "^0.4.1"
+    "amqplib": "^0.4.1",
+    "bunyan": "^1.8.0",
+    "node-uuid": "^1.4.7"
   },
   "devDependencies": {
     "eslint-config-defaults": "^9.0.0"

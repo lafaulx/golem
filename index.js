@@ -1,20 +1,34 @@
-const cluster = require('cluster');
-const http = require('http');
-const numCPUs = require('os').cpus().length;
+const amqp = require('amqplib/callback_api');
+const bunyan = require('bunyan');
 
+const spawnPhantomRender = require('./lib/spawnPhantomRender')
 const config = require('./local_config');
 
-if (cluster.isMaster) {
-  for (var i = 0; i < numCPUs; i++) {
-    cluster.fork();
-  }
+var log = bunyan.createLogger({ name: 'glm_server' });
 
-  cluster.on('exit', (worker, code, signal) => {
-    console.log(`worker ${worker.process.pid} died`);
+amqp.connect(config.RABBITMQ_ADDR, function(err, conn) {
+  conn.createChannel(function(err, ch) {
+    var q = 'glm_queue';
+
+    ch.assertQueue(q, {durable: false});
+    ch.prefetch(1);
+
+    log.info('Awaiting RPC requests');
+
+    ch.consume(q, function reply(msg) {
+      var data = JSON.parse(msg.content.toString());
+
+      log.info(`Received data: ${data.toString()}`);
+
+      spawnPhantomRender(data.html, data.width, data.height, function(id) {
+        log.info(`Generated picture: ${id}`);
+
+        ch.sendToQueue(msg.properties.replyTo,
+          new Buffer(id),
+          {correlationId: msg.properties.correlationId});
+
+        ch.ack(msg);
+      })
+    });
   });
-} else {
-  http.createServer((req, res) => {
-    res.writeHead(200);
-    res.end('hello world\n');
-  }).listen(config.NODEJS_PORT);
-}
+});

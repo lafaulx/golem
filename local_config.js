@@ -1,9 +1,6 @@
-const NODEJS_ADDR = process.env.NODEJS_ADDR || 'localhost';
-const NODEJS_PORT = process.env.NODEJS_PORT || 3000;
+const path = require('path');
 
 module.exports = {
-  NODEJS_ADDR,
-  NODEJS_PORT,
-
-  API_ORIGIN: `http://${NODEJS_ADDR}:${NODEJS_PORT}`,
+  RABBITMQ_ADDR: 'amqp://localhost',
+  TEMP_DIR: path.join(__dirname, 'temp')
 };
