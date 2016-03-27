@@ -18,13 +18,23 @@ amqp.connect(config.RABBITMQ_ADDR, function(err, conn) {
     ch.consume(q, function reply(msg) {
       var data = JSON.parse(msg.content.toString());
 
-      log.info(`Received data: ${data.toString()}`);
+      log.info(`Received data: ${msg.content.toString()}`);
 
       spawnPhantomRender(data.html, data.width, data.height, function(err, id) {
-        log.info(`Generated picture: ${id}`);
+        var response = {};
+
+        if (err) {
+          log.error(err);
+          response.error = err;
+        }
+
+        if (id) {
+          log.info(`Generated picture: ${id}`);
+          response.id = id;
+        }
 
         ch.sendToQueue(msg.properties.replyTo,
-          new Buffer(id),
+          new Buffer(JSON.stringify(response)),
           {correlationId: msg.properties.correlationId});
 
         ch.ack(msg);
