@@ -1,5 +1,5 @@
 {
-  "name": "golem-server",
+  "name": "photographer",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -8,14 +8,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/lafaulx/golem-server.git"
+    "url": "git+https://github.com/lafaulx/photographer.git"
   },
   "author": "Yaroslav Kravchenko",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/lafaulx/golem-server/issues"
+    "url": "https://github.com/lafaulx/photographer/issues"
   },
-  "homepage": "https://github.com/lafaulx/golem-server#readme",
+  "homepage": "https://github.com/lafaulx/photographer#readme",
   "dependencies": {
     "amqplib": "^0.4.1",
     "aws-sdk": "^2.2.47",

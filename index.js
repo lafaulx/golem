@@ -5,19 +5,30 @@ const spawnPhantomRender = require('./lib/spawnPhantomRender');
 const uploadImageToS3 = require('./lib/uploadImageToS3');
 const config = require('./local_config');
 
-var log = bunyan.createLogger({ name: 'glm_server' });
+const log = bunyan.createLogger({ name: 'photographer' });
+
+function reply(ch, msg) {
+  return function(data) {
+    ch.sendToQueue(msg.properties.replyTo,
+    new Buffer(JSON.stringify(data)),
+    {correlationId: msg.properties.correlationId});
+
+    ch.ack(msg);
+  }
+}
 
 amqp.connect(config.RABBITMQ_ADDR, function(err, conn) {
   conn.createChannel(function(err, ch) {
-    var q = 'glm_queue';
+    const q = 'pht_queue';
 
     ch.assertQueue(q, {durable: false});
     ch.prefetch(1);
 
     log.info('Awaiting RPC requests');
 
-    ch.consume(q, function reply(msg) {
-      var data = JSON.parse(msg.content.toString());
+    ch.consume(q, function(msg) {
+      const data = JSON.parse(msg.content.toString());
+      const curriedReply = reply(ch, msg);
 
       log.info(`Received data: ${msg.content.toString()}`);
 
@@ -25,12 +36,7 @@ amqp.connect(config.RABBITMQ_ADDR, function(err, conn) {
         if (err) {
           log.error(`Error occured while generating picture: ${err}`);
 
-          ch.sendToQueue(msg.properties.replyTo,
-            new Buffer(JSON.stringify({ error: err })),
-            {correlationId: msg.properties.correlationId});
-
-          ch.ack(msg);
-
+          curriedReply({ error: err });
           return;
         }
 
@@ -40,22 +46,13 @@ amqp.connect(config.RABBITMQ_ADDR, function(err, conn) {
           if (err) {
             log.error(`Error occured while uploading picture: ${err}`);
 
-            ch.sendToQueue(msg.properties.replyTo,
-              new Buffer(JSON.stringify({ error: err })),
-              {correlationId: msg.properties.correlationId});
-
-            ch.ack(msg);
-
+            curriedReply({ error: err })
             return;
           }
 
           log.info(`Uploaded picture: ${url}`);
 
-          ch.sendToQueue(msg.properties.replyTo,
-            new Buffer(JSON.stringify({ url: url })),
-            {correlationId: msg.properties.correlationId});
-
-          ch.ack(msg);
+          curriedReply({ url: url });
         });
       });
     });
