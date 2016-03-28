@@ -1,7 +1,8 @@
 const amqp = require('amqplib/callback_api');
 const bunyan = require('bunyan');
 
-const spawnPhantomRender = require('./lib/spawnPhantomRender')
+const spawnPhantomRender = require('./lib/spawnPhantomRender');
+const uploadImageToS3 = require('./lib/uploadImageToS3');
 const config = require('./local_config');
 
 var log = bunyan.createLogger({ name: 'glm_server' });
@@ -20,25 +21,43 @@ amqp.connect(config.RABBITMQ_ADDR, function(err, conn) {
 
       log.info(`Received data: ${msg.content.toString()}`);
 
-      spawnPhantomRender(data.html, data.width, data.height, function(err, id) {
-        var response = {};
-
+      spawnPhantomRender(data.html, data.width, data.height, function(err, fileName) {
         if (err) {
-          log.error(err);
-          response.error = err;
+          log.error(`Error occured while generating picture: ${err}`);
+
+          ch.sendToQueue(msg.properties.replyTo,
+            new Buffer(JSON.stringify({ error: err })),
+            {correlationId: msg.properties.correlationId});
+
+          ch.ack(msg);
+
+          return;
         }
 
-        if (id) {
-          log.info(`Generated picture: ${id}`);
-          response.id = id;
-        }
+        log.info(`Generated picture: ${fileName}`);
 
-        ch.sendToQueue(msg.properties.replyTo,
-          new Buffer(JSON.stringify(response)),
-          {correlationId: msg.properties.correlationId});
+        uploadImageToS3(fileName, function(err, url) {
+          if (err) {
+            log.error(`Error occured while uploading picture: ${err}`);
 
-        ch.ack(msg);
-      })
+            ch.sendToQueue(msg.properties.replyTo,
+              new Buffer(JSON.stringify({ error: err })),
+              {correlationId: msg.properties.correlationId});
+
+            ch.ack(msg);
+
+            return;
+          }
+
+          log.info(`Uploaded picture: ${url}`);
+
+          ch.sendToQueue(msg.properties.replyTo,
+            new Buffer(JSON.stringify({ url: url })),
+            {correlationId: msg.properties.correlationId});
+
+          ch.ack(msg);
+        });
+      });
     });
   });
 });
