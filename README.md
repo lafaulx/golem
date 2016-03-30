@@ -25,7 +25,7 @@ At this point your server is ready to accept tasks.
 
 ## TODO
 
-  - this stuff is pretty slow at the moment – probably should using other options to render HTML (Selenium)
+  - this stuff is pretty slow at the moment – probably should try using other options to render HTML (Selenium)
   - ability to disable S3 upload and return image file
   - add more useful options
 
